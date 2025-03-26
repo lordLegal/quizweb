@@ -1,38 +1,39 @@
-// app/auth/login/page.tsx
+// app/auth/register/page.tsx
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { registerUser } from "@/app/utils/authoptions";
 
-// PPR ist aktiviert über die layout.tsx oder durch page-Konfiguration
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Hier nutzen wir die Server Action direkt, ohne API-Route
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    try {
-      const result = await signIn("credentials", {
-        username,
-        password,
-        redirect: false,
-      });
+    if (password !== confirmPassword) {
+      setError("Die Passwörter stimmen nicht überein.");
+      setLoading(false);
+      return;
+    }
 
-      if (result?.error) {
-        setError(result.error);
-      } else {
-        // Erfolgreiche Anmeldung - zur Spieleseite weiterleiten
-        router.push("/game/dashboard");
-      }
+    try {
+      // registerUser ist ein Server Action, direkt aufrufbar vom Client
+      await registerUser(username, email, password);
+      
+      // Zur Login-Seite weiterleiten
+      router.push("/auth/login?registered=true");
     } catch (error) {
-      setError("Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.");
+      setError((error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -41,7 +42,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Anmelden</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center">Registrieren</h1>
         
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -64,7 +65,21 @@ export default function LoginPage() {
             />
           </div>
           
-          <div className="mb-6">
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-2" htmlFor="email">
+              E-Mail
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              required
+            />
+          </div>
+          
+          <div className="mb-4">
             <label className="block text-gray-700 mb-2" htmlFor="password">
               Passwort
             </label>
@@ -78,20 +93,34 @@ export default function LoginPage() {
             />
           </div>
           
+          <div className="mb-6">
+            <label className="block text-gray-700 mb-2" htmlFor="confirmPassword">
+              Passwort wiederholen
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              required
+            />
+          </div>
+          
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md"
           >
-            {loading ? "Wird angemeldet..." : "Anmelden"}
+            {loading ? "Wird registriert..." : "Registrieren"}
           </button>
         </form>
         
         <div className="mt-4 text-center">
           <p>
-            Noch kein Konto?{" "}
-            <a href="/auth/register" className="text-blue-500 hover:underline">
-              Registrieren
+            Bereits ein Konto?{" "}
+            <a href="/auth/login" className="text-blue-500 hover:underline">
+              Anmelden
             </a>
           </p>
         </div>
