@@ -1,215 +1,167 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
+// Benutzermodell
 model User {
-  id                     String              @id @default(cuid())
-  name                   String?
-  email                  String              @unique
-  emailVerified          DateTime?
-  password               String? // Passwort-Hash für Authentifizierung
-  image                  String?
-  createdAt              DateTime            @default(now())
-  updatedAt              DateTime            @updatedAt
-  // Wichtig: Das ist die Lucia Auth-Verbindung
-  sessions               Session[]
-  // Rest deiner bisherigen Felder und Relationen
-  roles                  UserRole[]
-  playerProfile          PlayerProfile?
-  gameSessions           GameSession[]
-  achievements           PlayerAchievement[]
-  inventoryItems         PlayerInventory[]
-  sentFriendRequests     Friend[]            @relation("Requester")
-  receivedFriendRequests Friend[]            @relation("Recipient")
-  leaderboardEntries     LeaderboardEntry[]
-  userActivities         UserActivity[]
+  id            Int     @id @default(autoincrement())
+  email         String  @unique
+  username      String
+  passwordHash  String  @map("password_hash")
+  emailVerified Boolean @default(false) @map("email_verified")
+  totpKey       Bytes?  @map("totp_key")
+  recoveryCode  Bytes   @map("recovery_code")
+
+  // Beziehungen
+  sessions           Session[]
+  emailVerifications EmailVerificationRequest[]
+  passwordResets     PasswordResetSession[]
+  quizAttempts       QuizAttempt[]
+  createdQuizzes     Quiz[]                     @relation("QuizCreator")
+
+  @@index([email], name: "email_index")
+  @@map("user")
 }
 
-// Wichtig: Session-Modell für Lucia Auth
+// Sitzungsmodell
 model Session {
-  id        String   @id
-  userId    String
-  expiresAt DateTime
-  user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+  id                String   @id @default(uuid())
+  userId            Int      @map("user_id")
+  expiresAt         DateTime @map("expires_at")
+  twoFactorVerified Boolean  @default(false) @map("two_factor_verified")
+
+  // Beziehung
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("session")
 }
 
-model Role {
-  id    String     @id @default(cuid())
-  name  String     @unique
-  users UserRole[]
+// E-Mail-Verifizierungsanfrage
+model EmailVerificationRequest {
+  id        String   @id @default(uuid())
+  userId    Int      @map("user_id")
+  email     String
+  code      String
+  expiresAt DateTime @map("expires_at")
+
+  // Beziehung
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("email_verification_request")
 }
 
-model UserRole {
-  userId String
-  roleId String
-  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+// Passwort-Zurücksetzen-Sitzung
+model PasswordResetSession {
+  id                String   @id @default(uuid())
+  userId            Int      @map("user_id")
+  email             String
+  code              String
+  expiresAt         DateTime @map("expires_at")
+  emailVerified     Boolean  @default(false) @map("email_verified")
+  twoFactorVerified Boolean  @default(false) @map("two_factor_verified")
 
-  @@id([userId, roleId])
+  // Beziehung
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("password_reset_session")
 }
 
-model PlayerProfile {
-  id            String    @id @default(cuid())
-  userId        String    @unique
-  nickname      String
-  level         Int       @default(1)
-  experience    Int       @default(0)
-  totalPlayTime Int       @default(0)
-  lastLogin     DateTime?
-  avatarUrl     String?
-  bio           String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Game {
-  id           String        @id @default(cuid())
-  title        String        @unique
-  description  String
-  version      String
-  releaseDate  DateTime
-  isActive     Boolean       @default(true)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  gameSessions GameSession[]
-  gameItems    GameItem[]
-  achievements Achievement[]
-  leaderboards Leaderboard[]
-}
-
-model GameSession {
-  id         String    @id @default(cuid())
-  userId     String
-  gameId     String
-  startTime  DateTime  @default(now())
-  endTime    DateTime?
-  duration   Int?
-  score      Int?
-  completed  Boolean   @default(false)
-  ipAddress  String?
-  deviceInfo String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  game       Game      @relation(fields: [gameId], references: [id])
-}
-
-model Achievement {
-  id             String              @id @default(cuid())
-  gameId         String
-  title          String
-  description    String
-  iconUrl        String?
-  pointValue     Int                 @default(0)
-  isSecret       Boolean             @default(false)
-  unlockCriteria String?
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  game           Game                @relation(fields: [gameId], references: [id])
-  players        PlayerAchievement[]
-}
-
-model PlayerAchievement {
-  id            String      @id @default(cuid())
-  userId        String
-  achievementId String
-  unlockedAt    DateTime    @default(now())
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  achievement   Achievement @relation(fields: [achievementId], references: [id])
-
-  @@unique([userId, achievementId])
-}
-
-model GameItem {
-  id              String            @id @default(cuid())
-  gameId          String
-  name            String
-  description     String
-  type            String
-  rarity          String
-  iconUrl         String?
-  price           Float?
-  isActive        Boolean           @default(true)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  game            Game              @relation(fields: [gameId], references: [id])
-  playerInventory PlayerInventory[]
-}
-
-model PlayerInventory {
-  id         String   @id @default(cuid())
-  userId     String
-  gameItemId String
-  quantity   Int      @default(1)
-  acquired   DateTime @default(now())
-  isEquipped Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  gameItem   GameItem @relation(fields: [gameItemId], references: [id])
-
-  @@unique([userId, gameItemId])
-}
-
-model Friend {
-  id          String   @id @default(cuid())
-  requesterId String
-  recipientId String
-  status      String   @default("pending")
+// Quiz-Modell
+model Quiz {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  isPublic    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  requester   User     @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
-  recipient   User     @relation("Recipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  creatorId   Int      @map("creator_id")
 
-  @@unique([requesterId, recipientId])
+  // Beziehungen
+  creator      User          @relation("QuizCreator", fields: [creatorId], references: [id])
+  questions    Question[]
+  quizAttempts QuizAttempt[]
+
+  @@map("quiz")
 }
 
-model Leaderboard {
-  id             String             @id @default(cuid())
-  gameId         String
-  name           String
-  description    String?
-  type           String
-  resetFrequency String?
-  lastReset      DateTime?
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  game           Game               @relation(fields: [gameId], references: [id])
-  entries        LeaderboardEntry[]
+// Fragen-Modell
+model Question {
+  id          String       @id @default(uuid())
+  text        String
+  explanation String?
+  points      Int          @default(1)
+  type        QuestionType @default(MULTIPLE_CHOICE)
+  quizId      String       @map("quiz_id")
+  orderIndex  Int          @default(0) @map("order_index")
+
+  // Beziehungen
+  quiz        Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options     Option[]
+  userAnswers UserAnswer[]
+
+  @@map("question")
 }
 
-model LeaderboardEntry {
-  id            String      @id @default(cuid())
-  leaderboardId String
-  userId        String
-  score         Int
-  rank          Int?
-  metadata      Json?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  leaderboard   Leaderboard @relation(fields: [leaderboardId], references: [id])
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+// Antwortoptionen-Modell
+model Option {
+  id         String  @id @default(uuid())
+  text       String
+  isCorrect  Boolean @default(false) @map("is_correct")
+  questionId String  @map("question_id")
+  orderIndex Int     @default(0) @map("order_index")
 
-  @@unique([leaderboardId, userId])
-  @@index([leaderboardId, score])
+  // Beziehungen
+  question    Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  userAnswers UserAnswer[]
+
+  @@map("option")
 }
 
-model UserActivity {
-  id        String   @id @default(cuid())
-  userId    String
-  action    String
-  ipAddress String?
-  userAgent String?
-  metadata  Json?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+// Quiz-Versuch-Modell
+model QuizAttempt {
+  id          String    @id @default(uuid())
+  userId      Int       @map("user_id")
+  quizId      String    @map("quiz_id")
+  startedAt   DateTime  @default(now()) @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  score       Int?
 
-  @@index([userId, action])
-  @@index([createdAt])
+  // Beziehungen
+  user        User         @relation(fields: [userId], references: [id])
+  quiz        Quiz         @relation(fields: [quizId], references: [id])
+  userAnswers UserAnswer[]
+
+  @@map("quiz_attempt")
+}
+
+// Benutzerantwort-Modell
+model UserAnswer {
+  id            String  @id @default(uuid())
+  quizAttemptId String  @map("quiz_attempt_id")
+  questionId    String  @map("question_id")
+  optionId      String? @map("option_id")
+  textAnswer    String? @map("text_answer")
+
+  // Beziehungen
+  quizAttempt QuizAttempt @relation(fields: [quizAttemptId], references: [id], onDelete: Cascade)
+  question    Question    @relation(fields: [questionId], references: [id])
+  option      Option?     @relation(fields: [optionId], references: [id])
+
+  @@map("user_answer")
+}
+
+// Fragentyp-Enum
+enum QuestionType {
+  MULTIPLE_CHOICE
+  SINGLE_CHOICE
+  TRUE_FALSE
+  TEXT
 }

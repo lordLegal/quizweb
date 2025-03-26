@@ -3,7 +3,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { registerUser } from "@/app/utils/authoptions";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -27,8 +26,6 @@ export default function RegisterPage() {
     }
 
     try {
-      // registerUser ist ein Server Action, direkt aufrufbar vom Client
-      await registerUser(username, email, password);
       
       // Zur Login-Seite weiterleiten
       router.push("/auth/login?registered=true");
