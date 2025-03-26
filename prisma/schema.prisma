@@ -1,0 +1,295 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     String              @id @default(cuid())
+  name                   String?
+  email                  String              @unique
+  emailVerified          DateTime?
+  image                  String?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  accounts               Account[]
+  Authenticator          Authenticator[]
+  licensedDevices        LicensedDevices[]
+  purchases              Purchase[]
+  sessions               Session[]
+  roles                  UserRole[]
+  // Neue Spielbezogene Relationen
+  playerProfile          PlayerProfile?
+  gameSessions           GameSession[]
+  achievements           PlayerAchievement[]
+  inventoryItems         PlayerInventory[]
+  sentFriendRequests     Friend[]            @relation("Requester")
+  receivedFriendRequests Friend[]            @relation("Recipient")
+  leaderboardEntries     LeaderboardEntry[]
+}
+
+model Role {
+  id    String     @id @default(cuid())
+  name  String     @unique
+  users UserRole[]
+}
+
+model UserRole {
+  userId String
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@id([userId, roleId])
+}
+
+model Purchase {
+  id              String             @id @default(cuid())
+  userId          String
+  product         String
+  createdAt       DateTime           @default(now())
+  stripeSessionId String
+  LicenceKey      String             @unique
+  LicensedDecive  LicensedDevices[]
+  user            User               @relation(fields: [userId], references: [id])
+  // Neue Spielbezogene Felder
+  gameItems       GameItemPurchase[]
+}
+
+model LicensedDevices {
+  id           String   @id @default(cuid())
+  userId       String
+  deviceName   String
+  IpAddress    String
+  deviceString String
+  purchaseId   String
+  createdAt    DateTime @default(now())
+  purchase     Purchase @relation(fields: [purchaseId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+  user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}
+
+model Contact {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String
+  phone     String
+  topic     String
+  message   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Neue Spielbezogene Modelle
+
+model Game {
+  id           String        @id @default(cuid())
+  title        String        @unique
+  description  String
+  version      String
+  releaseDate  DateTime
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  gameSessions GameSession[]
+  gameItems    GameItem[]
+  achievements Achievement[]
+  leaderboards Leaderboard[]
+}
+
+model PlayerProfile {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  nickname      String
+  level         Int       @default(1)
+  experience    Int       @default(0)
+  totalPlayTime Int       @default(0) // In Minuten
+  lastLogin     DateTime?
+  avatarUrl     String?
+  bio           String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model GameSession {
+  id         String    @id @default(cuid())
+  userId     String
+  gameId     String
+  startTime  DateTime  @default(now())
+  endTime    DateTime?
+  duration   Int? // In Sekunden
+  score      Int?
+  completed  Boolean   @default(false)
+  ipAddress  String?
+  deviceInfo String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       User      @relation(fields: [userId], references: [id])
+  game       Game      @relation(fields: [gameId], references: [id])
+}
+
+model Achievement {
+  id             String              @id @default(cuid())
+  gameId         String
+  title          String
+  description    String
+  iconUrl        String?
+  pointValue     Int                 @default(0)
+  isSecret       Boolean             @default(false)
+  unlockCriteria String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  game           Game                @relation(fields: [gameId], references: [id])
+  players        PlayerAchievement[]
+}
+
+model PlayerAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime    @default(now())
+  user          User        @relation(fields: [userId], references: [id])
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+
+  @@unique([userId, achievementId])
+}
+
+model GameItem {
+  id              String             @id @default(cuid())
+  gameId          String
+  name            String
+  description     String
+  type            String // z.B. "weapon", "skin", "powerup"
+  rarity          String // z.B. "common", "rare", "legendary"
+  iconUrl         String?
+  price           Float?
+  isActive        Boolean            @default(true)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  game            Game               @relation(fields: [gameId], references: [id])
+  playerInventory PlayerInventory[]
+  purchases       GameItemPurchase[]
+}
+
+model GameItemPurchase {
+  id              String   @id @default(cuid())
+  purchaseId      String
+  gameItemId      String
+  quantity        Int      @default(1)
+  priceAtPurchase Float
+  createdAt       DateTime @default(now())
+  purchase        Purchase @relation(fields: [purchaseId], references: [id])
+  gameItem        GameItem @relation(fields: [gameItemId], references: [id])
+}
+
+model PlayerInventory {
+  id         String   @id @default(cuid())
+  userId     String
+  gameItemId String
+  quantity   Int      @default(1)
+  acquired   DateTime @default(now())
+  isEquipped Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id])
+  gameItem   GameItem @relation(fields: [gameItemId], references: [id])
+
+  @@unique([userId, gameItemId])
+}
+
+model Friend {
+  id          String   @id @default(cuid())
+  requesterId String
+  recipientId String
+  status      String   @default("pending") // "pending", "accepted", "rejected"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  requester   User     @relation("Requester", fields: [requesterId], references: [id])
+  recipient   User     @relation("Recipient", fields: [recipientId], references: [id])
+
+  @@unique([requesterId, recipientId])
+}
+
+model Leaderboard {
+  id             String             @id @default(cuid())
+  gameId         String
+  name           String
+  description    String?
+  type           String // z.B. "daily", "weekly", "all-time"
+  resetFrequency String? // z.B. "daily", "weekly", "monthly", "never"
+  lastReset      DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  game           Game               @relation(fields: [gameId], references: [id])
+  entries        LeaderboardEntry[]
+}
+
+model LeaderboardEntry {
+  id            String      @id @default(cuid())
+  leaderboardId String
+  userId        String
+  score         Int
+  rank          Int?
+  metadata      Json? // Zusätzliche spielspezifische Daten
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  leaderboard   Leaderboard @relation(fields: [leaderboardId], references: [id])
+  user          User        @relation(fields: [userId], references: [id])
+
+  @@unique([leaderboardId, userId])
+  @@index([leaderboardId, score]) // Für effiziente Sortierung und Abfragen
+}
