@@ -30,7 +30,7 @@ export default async function RootLayout({
     
   return (
     <html lang="de">
-      <body className={inter.className}>
+      <body >
         <Navbar user={user_Real} isLoading={isLoading} />
         <main className="pt-10">
           {children}
