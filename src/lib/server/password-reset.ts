@@ -1,5 +1,3 @@
-'use server'
-
 import { PrismaClient } from '@prisma/client';
 import { encodeHexLowerCase } from "@oslojs/encoding";
 import { generateRandomOTP } from "./utils";
@@ -110,6 +108,7 @@ export async function invalidateUserPasswordResetSessions(userId: number): Promi
 }
 
 export async function validatePasswordResetSessionRequest(): Promise<PasswordResetSessionValidationResult> {
+	"use server";
 	const cookieStore = await cookies();
 	const token = cookieStore.get("password_reset_session")?.value ?? null;
 	if (token === null) {
@@ -123,6 +122,7 @@ export async function validatePasswordResetSessionRequest(): Promise<PasswordRes
 }
 
 export async function setPasswordResetSessionTokenCookie(token: string, expiresAt: Date): Promise<void> {
+	'use server'
 	const cookieStore = await cookies();
 	cookieStore.set("password_reset_session", token, {
 		expires: expiresAt,
@@ -132,8 +132,8 @@ export async function setPasswordResetSessionTokenCookie(token: string, expiresA
 		secure: process.env.NODE_ENV === "production"
 	});
 }
-
 export async function deletePasswordResetSessionTokenCookie(): Promise<void> {
+	'use server'
 	const cookieStore = await cookies();
 	cookieStore.set("password_reset_session", "", {
 		maxAge: 0,

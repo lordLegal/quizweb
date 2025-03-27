@@ -2,7 +2,8 @@ import { decodeBase64 } from "@oslojs/encoding";
 import { createCipheriv, createDecipheriv } from "crypto";
 import { DynamicBuffer } from "@oslojs/binary";
 
-const key = decodeBase64(process.env.ENCRYPTION_KEY ?? "");
+const rawKey = decodeBase64(process.env.ENCRYPTION_KEY ?? "");
+const key = rawKey.slice(0, 16); // Ensure key is exactly 16 bytes for AES-128
 
 export function encrypt(data: Uint8Array): Uint8Array {
 	const iv = new Uint8Array(16);
@@ -31,7 +32,6 @@ export function decrypt(encrypted: Uint8Array): Uint8Array {
 	decrypted.write(decipher.final());
 	return decrypted.bytes();
 }
-
 export function decryptToString(data: Uint8Array): string {
 	return new TextDecoder().decode(decrypt(data));
 }

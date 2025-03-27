@@ -3,11 +3,14 @@ import { NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
 
-export async function GET(request: Request, { params }: { params: { lobbyId: string } }) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ lobbyId: string }> }
+) {
   try {
     const { lobbyId } = await params;
     const lobby = await prisma.lobby.findUnique({
-      where: { id:  lobbyId},
+      where: { id: lobbyId },
       include: { participants: true },
     });
     if (!lobby) {

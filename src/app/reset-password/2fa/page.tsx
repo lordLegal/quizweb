@@ -1,3 +1,4 @@
+"use server"
 import { PasswordResetRecoveryCodeForm, PasswordResetTOTPForm } from "./components";
 
 import { validatePasswordResetSessionRequest } from "@/lib/server/password-reset";

@@ -1,3 +1,4 @@
+"use server";
 import { SignUpForm } from "./components";
 import Link from "next/link";
 

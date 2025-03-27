@@ -1,3 +1,4 @@
+// app/lobby/waiting/LobbyPoller.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -22,14 +23,12 @@ export default function LobbyPoller({ lobbyId, initialLobby }: { lobbyId: string
           const data = await res.json();
           if (data.lobby) {
             const newLobby = data.lobby as Lobby;
-            // Zeige Notification, wenn ein neuer Teilnehmer dazukommt
             if (newLobby.participants.length > lobby.participants.length) {
               const newParticipant = newLobby.participants[newLobby.participants.length - 1];
               setNotification(`Neuer Teilnehmer: ${newParticipant.nickname || `User ${newParticipant.userId}`}`);
               setTimeout(() => setNotification(null), 3000);
             }
             setLobby(newLobby);
-            // Wenn der Status auf STARTED wechselt, leite alle weiter zur Quiz-Seite
             if (newLobby.status === 'STARTED') {
               router.push(`/lobby/quiz/${lobbyId}`);
             }
@@ -44,11 +43,7 @@ export default function LobbyPoller({ lobbyId, initialLobby }: { lobbyId: string
 
   return (
     <div>
-      {notification && (
-        <div className="bg-blue-100 text-blue-800 p-2 rounded mb-4">
-          {notification}
-        </div>
-      )}
+      {notification && <div className="bg-blue-100 text-blue-800 p-2 rounded mb-4">{notification}</div>}
     </div>
   );
 }

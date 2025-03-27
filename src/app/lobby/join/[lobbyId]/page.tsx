@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export default async function JoinLobbyPage({ params }: { params: { lobbyId: string } }) {
+export default async function JoinLobbyPage({ params }: { params: Promise<{ lobbyId: string }> }) {
   const { lobbyId } = await params;
 
   const lobby = await prisma.lobby.findUnique({

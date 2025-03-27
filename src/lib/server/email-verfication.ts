@@ -1,4 +1,3 @@
-"use server";
 import { PrismaClient } from '@prisma/client';
 import { generateRandomOTP } from "./utils";
 import { ExpiringTokenBucket } from "./rate-limit";
@@ -67,7 +66,7 @@ export async function deleteUserEmailVerificationRequest(userId: number): Promis
 	});
 }
 
-export function sendVerificationEmail(email: string, code: string): void {
+export async function sendVerificationEmail(email: string, code: string): Promise<void> {
 	console.log(`To ${email}: Your verification code is ${code}`);
 }
 

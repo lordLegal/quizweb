@@ -1,3 +1,4 @@
+// app/lobby/waiting/WaitingRoomActions.tsx
 'use client';
 import { useState } from 'react';
 interface WaitingRoomActionsProps {
@@ -18,9 +19,7 @@ export default function WaitingRoomActions({ lobbyId, hostId, currentUserId }: W
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ lobbyId }),
     });
-    if (res.ok) {
-      // Der Poller (LobbyPoller) leitet alle weiter, sobald der Status STARTED ist.
-    } else {
+    if (!res.ok) {
       const data = await res.json();
       alert(data.error || 'Fehler beim Starten der Lobby.');
     }
@@ -36,9 +35,7 @@ export default function WaitingRoomActions({ lobbyId, hostId, currentUserId }: W
       >
         {loading ? 'Starte Quiz...' : 'Quiz starten'}
       </button>
-      {!isHost && (
-        <p className="mt-2 text-gray-600">Nur der Host kann das Quiz starten.</p>
-      )}
+      {!isHost && <p className="mt-2 text-gray-600">Nur der Host kann das Quiz starten.</p>}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+"use server";
 import { PasswordResetEmailVerificationForm } from "./components";
 
 import { validatePasswordResetSessionRequest } from "@/lib/server/password-reset";
