@@ -1,41 +1,52 @@
-
 import { notFound } from 'next/navigation';
-import LobbyPoller from '../LobbyPoller';
-import WaitingRoomActions from './WaitingRoomActions';
-
+import QuizRound from './QuizRound';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export default async function WaitingRoomPage({ params }: { params: { lobbyId: string } }) {
+export default async function QuizRoundPage({ params }: { params: { lobbyId: string } }) {
   const { lobbyId } = params;
+  // Prüfe, ob die Lobby existiert und bereits gestartet wurde
   const lobby = await prisma.lobby.findUnique({
     where: { id: lobbyId },
-    include: { participants: true },
   });
-  if (!lobby) {
+  if (!lobby || lobby.status !== 'STARTED') {
     notFound();
   }
+  
+  // Falls eine Quiz-ID gesetzt ist, lade die zugehörigen Fragen
+  let questions: {
+    id: string;
+    quizId: string;
+    text: string;
+    orderIndex: number;
+    options: {
+      id: string;
+      questionId: string;
+      text: string;
+      isCorrect: boolean;
+    }[];
+  }[] = [];
+  if (lobby.quizId) {
+    questions = await prisma.question.findMany({
+      where: { quizId: lobby.quizId },
+      orderBy: { orderIndex: 'asc' },
+      include: {
+        options: true, // Hole die Antwortoptionen
+      },
+    });
+  }
+  // Optional: Begrenze die maximale Anzahl Fragen (z. B. 10)
+  const maxQuestions = 10;
+  if (questions.length > maxQuestions) {
+    questions = questions.slice(0, maxQuestions);
+  }
+  
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12">
-      <h1 className="text-3xl font-bold mb-6">Lobby: {lobby.id}</h1>
-      <p className="mb-2">Maximale Spielerzahl: {lobby.maxPlayers}</p>
-      <p className="mb-2">Status: {lobby.status}</p>
-      <div className="mb-4">
-        <p className="font-bold">Einladungslink:</p>
-        <p className="text-blue-600 underline">
-          {`${process.env.NEXT_PUBLIC_BASE_URL}/lobby/join/${lobby.id}`}
-        </p>
-      </div>
-      <LobbyPoller
-        lobbyId={lobby.id}
-        initialLobby={{
-          id: lobby.id,
-          status: lobby.status,
-          participants: lobby.participants,
-        }}
-      />
-      <WaitingRoomActions lobbyId={lobby.id} hostId={lobby.hostId} />
-    </div>
+    <QuizRound 
+      lobbyId={lobbyId}
+      questions={questions}
+      timerDuration={30}  // Timer-Dauer in Sekunden pro Frage
+    />
   );
 }

@@ -1,14 +1,17 @@
 'use client';
 import { useState } from 'react';
+interface WaitingRoomActionsProps {
+  lobbyId: string;
+  hostId: number;
+  currentUserId: number | null;
+}
 
-export default function WaitingRoomActions({ lobbyId, hostId }: { lobbyId: string; hostId: number; }) {
-  // Simuliere den aktuell eingeloggten User – in einer realen App holst du die User-ID aus der Session
-  const currentUserId = 1;
+export default function WaitingRoomActions({ lobbyId, hostId, currentUserId }: WaitingRoomActionsProps) {
   const isHost = currentUserId === hostId;
   const [loading, setLoading] = useState(false);
-
+  
   async function handleStart() {
-    if (!isHost) return; // Gäste dürfen nicht starten
+    if (!isHost) return;
     setLoading(true);
     const res = await fetch('/api/lobby/start', {
       method: 'POST',
@@ -16,13 +19,14 @@ export default function WaitingRoomActions({ lobbyId, hostId }: { lobbyId: strin
       body: JSON.stringify({ lobbyId }),
     });
     if (res.ok) {
-      // Der Poller (LobbyPoller) übernimmt den Statuswechsel und leitet alle weiter
+      // Der Poller (LobbyPoller) leitet alle weiter, sobald der Status STARTED ist.
     } else {
-      alert('Fehler beim Starten der Lobby.');
+      const data = await res.json();
+      alert(data.error || 'Fehler beim Starten der Lobby.');
     }
     setLoading(false);
   }
-
+  
   return (
     <div>
       <button 

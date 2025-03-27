@@ -1,11 +1,10 @@
 'use server';
-
-import { PrismaClient } from "@prisma/client";
-
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export async function createLobby(formData: FormData) {
   const hostId = Number(formData.get('hostId'));
+  const hostNickname = formData.get('hostNickname')?.toString() || null;
   const maxPlayers = Number(formData.get('maxPlayers'));
   const quizId = formData.get('quizId')?.toString() || null;
 
@@ -23,11 +22,12 @@ export async function createLobby(formData: FormData) {
     },
   });
 
-  // Gastgeber als ersten Teilnehmer eintragen
+  // Gastgeber als ersten Teilnehmer eintragen – setze dabei den tatsächlichen Nickname
   await prisma.lobbyParticipant.create({
     data: {
       lobbyId: lobby.id,
       userId: hostId,
+      nickname: hostNickname,
     },
   });
 

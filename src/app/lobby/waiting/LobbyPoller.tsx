@@ -25,7 +25,7 @@ export default function LobbyPoller({ lobbyId, initialLobby }: { lobbyId: string
             // Zeige Notification, wenn ein neuer Teilnehmer dazukommt
             if (newLobby.participants.length > lobby.participants.length) {
               const newParticipant = newLobby.participants[newLobby.participants.length - 1];
-              setNotification(`Neuer Teilnehmer: ${newParticipant.nickname || 'Unbekannt'}`);
+              setNotification(`Neuer Teilnehmer: ${newParticipant.nickname || `User ${newParticipant.userId}`}`);
               setTimeout(() => setNotification(null), 3000);
             }
             setLobby(newLobby);
@@ -49,14 +49,6 @@ export default function LobbyPoller({ lobbyId, initialLobby }: { lobbyId: string
           {notification}
         </div>
       )}
-      <div>
-        <h2 className="text-xl font-bold">Aktuelle Teilnehmer:</h2>
-        <ul>
-          {lobby.participants.map((p) => (
-            <li key={p.id}>{p.nickname || `User ${p.userId}`}</li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 }
