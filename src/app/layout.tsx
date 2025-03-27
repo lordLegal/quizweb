@@ -1,15 +1,11 @@
 // app/layout.tsx
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 //import Navbar from "./components/navbar";
 import { getCurrentSession } from "@/lib/server/session";
 import { getUserFromEmail } from "@/lib/server/user";
 import Navbar from "./components/navbar";
 import type { User } from "@/lib/server/user";
-
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Spieleplattform",
