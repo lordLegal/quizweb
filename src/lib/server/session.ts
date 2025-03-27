@@ -1,3 +1,4 @@
+"use server";
 import { PrismaClient } from '@prisma/client';
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";
@@ -88,6 +89,7 @@ export async function invalidateUserSessions(userId: number): Promise<void> {
 }
 
 export async function setSessionTokenCookie(token: string, expiresAt: Date): Promise<void> {
+	"use server";
 	const cookieStore = await cookies();
 	cookieStore.set("session", token, {
 		httpOnly: true,
@@ -99,6 +101,7 @@ export async function setSessionTokenCookie(token: string, expiresAt: Date): Pro
 }
 
 export async function deleteSessionTokenCookie(): Promise<void> {
+	"use server";
 	const cookieStore = await cookies();
 	cookieStore.set("session", "", {
 		httpOnly: true,
@@ -109,7 +112,7 @@ export async function deleteSessionTokenCookie(): Promise<void> {
 	});
 }
 
-export function generateSessionToken(): string {
+export async function generateSessionToken(): Promise<string> {
 	const tokenBytes = new Uint8Array(20);
 	crypto.getRandomValues(tokenBytes);
 	const token = encodeBase32LowerCaseNoPadding(tokenBytes).toLowerCase();

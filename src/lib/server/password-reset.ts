@@ -1,3 +1,5 @@
+'use server'
+
 import { PrismaClient } from '@prisma/client';
 import { encodeHexLowerCase } from "@oslojs/encoding";
 import { generateRandomOTP } from "./utils";
@@ -115,7 +117,7 @@ export async function validatePasswordResetSessionRequest(): Promise<PasswordRes
 	}
 	const result = await validatePasswordResetSessionToken(token);
 	if (result.session === null) {
-		deletePasswordResetSessionTokenCookie();
+		await deletePasswordResetSessionTokenCookie();
 	}
 	return result;
 }
@@ -132,7 +134,8 @@ export async function setPasswordResetSessionTokenCookie(token: string, expiresA
 }
 
 export async function deletePasswordResetSessionTokenCookie(): Promise<void> {
-	(await cookies()).set("password_reset_session", "", {
+	const cookieStore = await cookies();
+	cookieStore.set("password_reset_session", "", {
 		maxAge: 0,
 		sameSite: "lax",
 		httpOnly: true,
@@ -141,7 +144,7 @@ export async function deletePasswordResetSessionTokenCookie(): Promise<void> {
 	});
 }
 
-export function sendPasswordResetEmail(email: string, code: string): void {
+export async function sendPasswordResetEmail(email: string, code: string): Promise<void> {
 	console.log(`To ${email}: Your reset code is ${code}`);
 }
 

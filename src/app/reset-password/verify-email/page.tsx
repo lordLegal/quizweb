@@ -1,14 +1,14 @@
 import { PasswordResetEmailVerificationForm } from "./components";
 
 import { validatePasswordResetSessionRequest } from "@/lib/server/password-reset";
-import { globalGETRateLimit } from "@/lib/server/request";
+import { globalGETRateLimit } from "@/lib/server/requests";
 import { redirect } from "next/navigation";
 
-export default function Page() {
+export default async function Page() {
 	if (!globalGETRateLimit()) {
 		return "Too many requests";
 	}
-	const { session } = validatePasswordResetSessionRequest();
+	const { session } = await validatePasswordResetSessionRequest();
 	if (session === null) {
 		return redirect("/forgot-password");
 	}

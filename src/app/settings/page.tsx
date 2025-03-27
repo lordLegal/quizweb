@@ -4,13 +4,13 @@ import { RecoveryCodeSection, UpdateEmailForm, UpdatePasswordForm } from "./comp
 import { getCurrentSession } from "@/lib/server/session";
 import { redirect } from "next/navigation";
 import { getUserRecoverCode } from "@/lib/server/user";
-import { globalGETRateLimit } from "@/lib/server/request";
+import { globalGETRateLimit } from "@/lib/server/requests";
 
-export default function Page() {
+export default async function Page() {
 	if (!globalGETRateLimit()) {
 		return "Too many requests";
 	}
-	const { session, user } = getCurrentSession();
+	const { session, user } = await getCurrentSession();
 	if (session === null) {
 		return redirect("/login");
 	}
@@ -19,7 +19,7 @@ export default function Page() {
 	}
 	let recoveryCode: string | null = null;
 	if (user.registered2FA) {
-		recoveryCode = getUserRecoverCode(user.id);
+		recoveryCode = await getUserRecoverCode(user.id);
 	}
 	return (
 		<>

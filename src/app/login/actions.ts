@@ -77,7 +77,7 @@ export async function loginAction(_prev: ActionResult, formData: FormData): Prom
 	const sessionFlags: SessionFlags = {
 		twoFactorVerified: false
 	};
-	const sessionToken = generateSessionToken();
+	const sessionToken = await generateSessionToken();
 	const session = await createSession(sessionToken, user.id, sessionFlags);
 	setSessionTokenCookie(sessionToken, session.expiresAt);
 

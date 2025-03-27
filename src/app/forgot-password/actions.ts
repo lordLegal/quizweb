@@ -8,7 +8,7 @@ import {
 	setPasswordResetSessionTokenCookie
 } from "@/lib/server/password-reset";
 import { RefillingTokenBucket } from "@/lib/server/rate-limit";
-import { globalPOSTRateLimit } from "@/lib/server/request";
+import { globalPOSTRateLimit } from "@/lib/server/requests";
 import { generateSessionToken } from "@/lib/server/session";
 import { getUserFromEmail } from "@/lib/server/user";
 import { headers } from "next/headers";
@@ -24,7 +24,7 @@ export async function forgotPasswordAction(_prev: ActionResult, formData: FormDa
 		};
 	}
 	// TODO: Assumes X-Forwarded-For is always included.
-	const clientIP = headers().get("X-Forwarded-For");
+	const clientIP = (await headers()).get("X-Forwarded-For");
 	if (clientIP !== null && !passwordResetEmailIPBucket.check(clientIP, 1)) {
 		return {
 			message: "Too many requests"
@@ -42,7 +42,7 @@ export async function forgotPasswordAction(_prev: ActionResult, formData: FormDa
 			message: "Invalid email"
 		};
 	}
-	const user = getUserFromEmail(email);
+	const user = await getUserFromEmail(email);
 	if (user === null) {
 		return {
 			message: "Account does not exist"
@@ -59,11 +59,11 @@ export async function forgotPasswordAction(_prev: ActionResult, formData: FormDa
 		};
 	}
 	invalidateUserPasswordResetSessions(user.id);
-	const sessionToken = generateSessionToken();
+	const sessionToken = await generateSessionToken();
 	const session = createPasswordResetSession(sessionToken, user.id, user.email);
 
-	sendPasswordResetEmail(session.email, session.code);
-	setPasswordResetSessionTokenCookie(sessionToken, session.expiresAt);
+	sendPasswordResetEmail((await session).email, (await session).code);
+	setPasswordResetSessionTokenCookie(sessionToken, (await session).expiresAt);
 	return redirect("/reset-password/verify-email");
 }
 

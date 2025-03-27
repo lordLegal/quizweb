@@ -5,7 +5,7 @@ import {
 	validatePasswordResetSessionRequest
 } from "@/lib/server/password-reset";
 import { ExpiringTokenBucket } from "@/lib/server/rate-limit";
-import { globalPOSTRateLimit } from "@/lib/server/request";
+import { globalPOSTRateLimit } from "@/lib/server/requests";
 import { setUserAsEmailVerifiedIfEmailMatches } from "@/lib/server/user";
 import { redirect } from "next/navigation";
 
@@ -17,7 +17,7 @@ export async function verifyPasswordResetEmailAction(_prev: ActionResult, formDa
 			message: "Too many requests"
 		};
 	}
-	const { session } = validatePasswordResetSessionRequest();
+	const { session } = await validatePasswordResetSessionRequest();
 	if (session === null) {
 		return {
 			message: "Not authenticated"

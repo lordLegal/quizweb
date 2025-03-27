@@ -2,7 +2,7 @@
 
 import { recoveryCodeBucket, resetUser2FAWithRecoveryCode, totpBucket } from "@/lib/server/2fa";
 import { setPasswordResetSessionAs2FAVerified, validatePasswordResetSessionRequest } from "@/lib/server/password-reset";
-import { globalPOSTRateLimit } from "@/lib/server/request";
+import { globalPOSTRateLimit } from "@/lib/server/requests";
 import { getUserTOTPKey } from "@/lib/server/user";
 import { verifyTOTP } from "@oslojs/otp";
 import { redirect } from "next/navigation";
@@ -16,7 +16,7 @@ export async function verifyPasswordReset2FAWithTOTPAction(
 			message: "Too many requests"
 		};
 	}
-	const { session, user } = validatePasswordResetSessionRequest();
+	const { session, user } = await validatePasswordResetSessionRequest();
 	if (session === null) {
 		return {
 			message: "Not authenticated"
@@ -44,7 +44,7 @@ export async function verifyPasswordReset2FAWithTOTPAction(
 			message: "Please enter your code"
 		};
 	}
-	const totpKey = getUserTOTPKey(session.userId);
+	const totpKey = await getUserTOTPKey(session.userId);
 	if (totpKey === null) {
 		return {
 			message: "Forbidden"
@@ -74,7 +74,7 @@ export async function verifyPasswordReset2FAWithRecoveryCodeAction(
 			message: "Too many requests"
 		};
 	}
-	const { session, user } = validatePasswordResetSessionRequest();
+	const { session, user } = await validatePasswordResetSessionRequest();
 	if (session === null) {
 		return {
 			message: "Not authenticated"

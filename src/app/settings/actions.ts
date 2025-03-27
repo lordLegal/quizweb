@@ -15,10 +15,10 @@ import {
 	sendVerificationEmail,
 	sendVerificationEmailBucket,
 	setEmailVerificationRequestCookie
-} from "@/lib/server/email-verification";
+} from "@/lib/server/email-verfication";
 import { checkEmailAvailability, verifyEmailInput } from "@/lib/server/email";
 import { redirect } from "next/navigation";
-import { globalPOSTRateLimit } from "@/lib/server/request";
+import { globalPOSTRateLimit } from "@/lib/server/requests";
 
 import type { SessionFlags } from "@/lib/server/session";
 
@@ -30,7 +30,7 @@ export async function updatePasswordAction(_prev: ActionResult, formData: FormDa
 			message: "Too many requests"
 		};
 	}
-	const { session, user } = getCurrentSession();
+	const { session, user } = await getCurrentSession();
 	if (session === null) {
 		return {
 			message: "Not authenticated"
@@ -65,7 +65,7 @@ export async function updatePasswordAction(_prev: ActionResult, formData: FormDa
 			message: "Too many requests"
 		};
 	}
-	const passwordHash = getUserPasswordHash(user.id);
+	const passwordHash = await getUserPasswordHash(user.id);
 	const validPassword = await verifyPasswordHash(passwordHash, password);
 	if (!validPassword) {
 		return {
@@ -76,11 +76,11 @@ export async function updatePasswordAction(_prev: ActionResult, formData: FormDa
 	invalidateUserSessions(user.id);
 	await updateUserPassword(user.id, newPassword);
 
-	const sessionToken = generateSessionToken();
+	const sessionToken = await generateSessionToken();
 	const sessionFlags: SessionFlags = {
 		twoFactorVerified: session.twoFactorVerified
 	};
-	const newSession = createSession(sessionToken, user.id, sessionFlags);
+	const newSession = await createSession(sessionToken, user.id, sessionFlags);
 	setSessionTokenCookie(sessionToken, newSession.expiresAt);
 	return {
 		message: "Updated password"
@@ -93,7 +93,7 @@ export async function updateEmailAction(_prev: ActionResult, formData: FormData)
 			message: "Too many requests"
 		};
 	}
-	const { session, user } = getCurrentSession();
+	const { session, user } = await getCurrentSession();
 	if (session === null) {
 		return {
 			message: "Not authenticated"
@@ -135,7 +135,7 @@ export async function updateEmailAction(_prev: ActionResult, formData: FormData)
 			message: "Too many requests"
 		};
 	}
-	const verificationRequest = createEmailVerificationRequest(user.id, email);
+	const verificationRequest = await createEmailVerificationRequest(user.id, email);
 	sendVerificationEmail(verificationRequest.email, verificationRequest.code);
 	setEmailVerificationRequestCookie(verificationRequest);
 	return redirect("/verify-email");
@@ -148,7 +148,7 @@ export async function regenerateRecoveryCodeAction(): Promise<RegenerateRecovery
 			recoveryCode: null
 		};
 	}
-	const { session, user } = getCurrentSession();
+	const { session, user } = await getCurrentSession();
 	if (session === null || user === null) {
 		return {
 			error: "Not authenticated",
@@ -167,7 +167,7 @@ export async function regenerateRecoveryCodeAction(): Promise<RegenerateRecovery
 			recoveryCode: null
 		};
 	}
-	const recoveryCode = resetUserRecoveryCode(session.userId);
+	const recoveryCode = await resetUserRecoveryCode(session.userId);
 	return {
 		error: null,
 		recoveryCode

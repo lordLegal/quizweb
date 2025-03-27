@@ -14,7 +14,7 @@ export function UpdatePasswordForm() {
 	return (
 		<form action={action}>
 			<label htmlFor="form-password.password">Current password</label>
-			<input type="password" id="form-email.password" name="password" autoComplete="current-password" required />
+			<input type="password" id="form-email.password" name="password" autoComplete="current-password" required title="Enter your current password" placeholder="Enter your current password" />
 			<br />
 			<label htmlFor="form-password.new-password">New password</label>
 			<input type="password" id="form-password.new-password" name="new_password" autoComplete="new-password" required />

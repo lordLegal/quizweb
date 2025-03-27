@@ -14,7 +14,7 @@ import {
 } from "@/lib/server/session";
 import { updateUserPassword } from "@/lib/server/user";
 import { redirect } from "next/navigation";
-import { globalPOSTRateLimit } from "@/lib/server/request";
+import { globalPOSTRateLimit } from "@/lib/server/requests";
 
 import type { SessionFlags } from "@/lib/server/session";
 
@@ -24,7 +24,7 @@ export async function resetPasswordAction(_prev: ActionResult, formData: FormDat
 			message: "Too many requests"
 		};
 	}
-	const { session: passwordResetSession, user } = validatePasswordResetSessionRequest();
+	const { session: passwordResetSession, user } = await validatePasswordResetSessionRequest();
 	if (passwordResetSession === null) {
 		return {
 			message: "Not authenticated"
@@ -61,9 +61,9 @@ export async function resetPasswordAction(_prev: ActionResult, formData: FormDat
 	const sessionFlags: SessionFlags = {
 		twoFactorVerified: passwordResetSession.twoFactorVerified
 	};
-	const sessionToken = generateSessionToken();
+	const sessionToken = await generateSessionToken();
 	const session = createSession(sessionToken, user.id, sessionFlags);
-	setSessionTokenCookie(sessionToken, session.expiresAt);
+	setSessionTokenCookie(sessionToken, (await session).expiresAt);
 	deletePasswordResetSessionTokenCookie();
 	return redirect("/");
 }

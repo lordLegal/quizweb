@@ -81,7 +81,7 @@ export async function signupAction(_prev: ActionResult, formData: FormData): Pro
 	const sessionFlags: SessionFlags = {
 		twoFactorVerified: false
 	};
-	const sessionToken = generateSessionToken();
+	const sessionToken = await generateSessionToken();
 	const session = await createSession(sessionToken, user.id, sessionFlags);
 	setSessionTokenCookie(sessionToken, session.expiresAt);
 	return redirect("/2fa/setup");

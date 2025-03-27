@@ -1,5 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// prisma/schema.prisma
 
 generator client {
   provider = "prisma-client-js"
@@ -10,7 +9,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Benutzermodell
+// Benutzer
 model User {
   id            Int     @id @default(autoincrement())
   email         String  @unique
@@ -26,25 +25,25 @@ model User {
   passwordResets     PasswordResetSession[]
   quizAttempts       QuizAttempt[]
   createdQuizzes     Quiz[]                     @relation("QuizCreator")
+  hostedLobbies      Lobby[]                    @relation("LobbyHost")
 
   @@index([email], name: "email_index")
   @@map("user")
 }
 
-// Sitzungsmodell
+// Sitzungen
 model Session {
   id                String   @id @default(uuid())
   userId            Int      @map("user_id")
   expiresAt         DateTime @map("expires_at")
   twoFactorVerified Boolean  @default(false) @map("two_factor_verified")
 
-  // Beziehung
   user User @relation(fields: [userId], references: [id])
 
   @@map("session")
 }
 
-// E-Mail-Verifizierungsanfrage
+// E-Mail-Verifizierung
 model EmailVerificationRequest {
   id        String   @id @default(uuid())
   userId    Int      @map("user_id")
@@ -52,13 +51,12 @@ model EmailVerificationRequest {
   code      String
   expiresAt DateTime @map("expires_at")
 
-  // Beziehung
   user User @relation(fields: [userId], references: [id])
 
   @@map("email_verification_request")
 }
 
-// Passwort-Zurücksetzen-Sitzung
+// Passwort-Zurücksetzen
 model PasswordResetSession {
   id                String   @id @default(uuid())
   userId            Int      @map("user_id")
@@ -68,13 +66,12 @@ model PasswordResetSession {
   emailVerified     Boolean  @default(false) @map("email_verified")
   twoFactorVerified Boolean  @default(false) @map("two_factor_verified")
 
-  // Beziehung
   user User @relation(fields: [userId], references: [id])
 
   @@map("password_reset_session")
 }
 
-// Quiz-Modell
+// Quiz
 model Quiz {
   id          String   @id @default(uuid())
   title       String
@@ -84,15 +81,15 @@ model Quiz {
   updatedAt   DateTime @updatedAt
   creatorId   Int      @map("creator_id")
 
-  // Beziehungen
   creator      User          @relation("QuizCreator", fields: [creatorId], references: [id])
   questions    Question[]
   quizAttempts QuizAttempt[]
+  lobbies      Lobby[]
 
   @@map("quiz")
 }
 
-// Fragen-Modell
+// Fragen
 model Question {
   id          String       @id @default(uuid())
   text        String
@@ -102,7 +99,6 @@ model Question {
   quizId      String       @map("quiz_id")
   orderIndex  Int          @default(0) @map("order_index")
 
-  // Beziehungen
   quiz        Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
   options     Option[]
   userAnswers UserAnswer[]
@@ -110,7 +106,7 @@ model Question {
   @@map("question")
 }
 
-// Antwortoptionen-Modell
+// Antwortoptionen
 model Option {
   id         String  @id @default(uuid())
   text       String
@@ -118,14 +114,13 @@ model Option {
   questionId String  @map("question_id")
   orderIndex Int     @default(0) @map("order_index")
 
-  // Beziehungen
   question    Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
   userAnswers UserAnswer[]
 
   @@map("option")
 }
 
-// Quiz-Versuch-Modell
+// Quiz-Versuche
 model QuizAttempt {
   id          String    @id @default(uuid())
   userId      Int       @map("user_id")
@@ -134,7 +129,6 @@ model QuizAttempt {
   completedAt DateTime? @map("completed_at")
   score       Int?
 
-  // Beziehungen
   user        User         @relation(fields: [userId], references: [id])
   quiz        Quiz         @relation(fields: [quizId], references: [id])
   userAnswers UserAnswer[]
@@ -142,7 +136,7 @@ model QuizAttempt {
   @@map("quiz_attempt")
 }
 
-// Benutzerantwort-Modell
+// Benutzerantworten
 model UserAnswer {
   id            String  @id @default(uuid())
   quizAttemptId String  @map("quiz_attempt_id")
@@ -150,7 +144,6 @@ model UserAnswer {
   optionId      String? @map("option_id")
   textAnswer    String? @map("text_answer")
 
-  // Beziehungen
   quizAttempt QuizAttempt @relation(fields: [quizAttemptId], references: [id], onDelete: Cascade)
   question    Question    @relation(fields: [questionId], references: [id])
   option      Option?     @relation(fields: [optionId], references: [id])
@@ -164,4 +157,41 @@ enum QuestionType {
   SINGLE_CHOICE
   TRUE_FALSE
   TEXT
+}
+
+// Lobby-Status
+enum LobbyStatus {
+  WAITING
+  STARTED
+  FINISHED
+}
+
+// Lobby
+model Lobby {
+  id         String      @id @default(uuid())
+  hostId     Int         @map("host_id")
+  quizId     String?     @map("quiz_id")
+  maxPlayers Int         @map("max_players")
+  status     LobbyStatus @default(WAITING)
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+
+  host         User               @relation("LobbyHost", fields: [hostId], references: [id])
+  quiz         Quiz?              @relation(fields: [quizId], references: [id])
+  participants LobbyParticipant[]
+
+  @@map("lobby")
+}
+
+// Lobby-Teilnehmer
+model LobbyParticipant {
+  id       String   @id @default(uuid())
+  lobbyId  String   @map("lobby_id")
+  userId   Int?     @map("user_id")
+  nickname String?
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  lobby Lobby @relation(fields: [lobbyId], references: [id])
+
+  @@map("lobby_participant")
 }

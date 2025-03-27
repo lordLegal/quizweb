@@ -1,7 +1,7 @@
 import { ForgotPasswordForm } from "./components";
 import Link from "next/link";
 
-import { globalGETRateLimit } from "@/lib/server/request";
+import { globalGETRateLimit } from "@/lib/server/requests";
 
 export default function Page() {
 	if (!globalGETRateLimit()) {
