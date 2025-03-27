@@ -1,7 +1,7 @@
 "use server";
 
 import { totpBucket } from "@/lib/server/2fa";
-import { globalPOSTRateLimit } from "@/lib/server/request";
+import { globalPOSTRateLimit } from "@/lib/server/requests";
 import { getCurrentSession, setSessionAs2FAVerified } from "@/lib/server/session";
 import { getUserTOTPKey } from "@/lib/server/user";
 import { verifyTOTP } from "@oslojs/otp";
@@ -13,7 +13,7 @@ export async function verify2FAAction(_prev: ActionResult, formData: FormData): 
 			message: "Too many requests"
 		};
 	}
-	const { session, user } = getCurrentSession();
+	const { session, user } = await getCurrentSession();
 	if (session === null) {
 		return {
 			message: "Not authenticated"
@@ -46,7 +46,7 @@ export async function verify2FAAction(_prev: ActionResult, formData: FormData): 
 			message: "Too many requests"
 		};
 	}
-	const totpKey = getUserTOTPKey(user.id);
+	const totpKey = await getUserTOTPKey(user.id);
 	if (totpKey === null) {
 		return {
 			message: "Forbidden"

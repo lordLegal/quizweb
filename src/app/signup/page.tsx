@@ -5,11 +5,11 @@ import { getCurrentSession } from "@/lib/server/session";
 import { redirect } from "next/navigation";
 import { globalGETRateLimit } from "@/lib/server/requests";
 
-export default function Page() {
+export default async function Page() {
 	if (!globalGETRateLimit()) {
 		return "Too many requests";
 	}
-	const { session, user } = getCurrentSession();
+	const { session, user } = await getCurrentSession();
 	if (session !== null) {
 		if (!user.emailVerified) {
 			return redirect("/verify-email");

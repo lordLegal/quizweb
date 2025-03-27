@@ -3,13 +3,13 @@ import Link from "next/link";
 import { getCurrentSession } from "@/lib/server/session";
 import { getUserRecoverCode } from "@/lib/server/user";
 import { redirect } from "next/navigation";
-import { globalGETRateLimit } from "@/lib/server/request";
+import { globalGETRateLimit } from "@/lib/server/requests";
 
-export default function Page() {
-	if (!globalGETRateLimit()) {
+export default async function Page() {
+	if (!await globalGETRateLimit()) {
 		return "Too many requests";
 	}
-	const { session, user } = getCurrentSession();
+	const { session, user } = await getCurrentSession();
 	if (session === null) {
 		return redirect("/login");
 	}
@@ -22,7 +22,7 @@ export default function Page() {
 	if (!session.twoFactorVerified) {
 		return redirect("/2fa");
 	}
-	const recoveryCode = getUserRecoverCode(user.id);
+	const recoveryCode = await getUserRecoverCode(user.id);
 	return (
 		<>
 			<h1>Recovery code</h1>

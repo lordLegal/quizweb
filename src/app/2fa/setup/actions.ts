@@ -1,7 +1,7 @@
 "use server";
 
 import { RefillingTokenBucket } from "@/lib/server/rate-limit";
-import { globalPOSTRateLimit } from "@/lib/server/request";
+import { globalPOSTRateLimit } from "@/lib/server/requests";
 import { getCurrentSession, setSessionAs2FAVerified } from "@/lib/server/session";
 import { updateUserTOTPKey } from "@/lib/server/user";
 import { decodeBase64 } from "@oslojs/encoding";
@@ -16,7 +16,7 @@ export async function setup2FAAction(_prev: ActionResult, formData: FormData): P
 			message: "Too many requests"
 		};
 	}
-	const { session, user } = getCurrentSession();
+	const { session, user } = await getCurrentSession();
 	if (session === null) {
 		return {
 			message: "Not authenticated"

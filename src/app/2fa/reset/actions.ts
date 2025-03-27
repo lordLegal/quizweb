@@ -6,7 +6,7 @@ import { getCurrentSession } from "@/lib/server/session";
 import { redirect } from "next/navigation";
 
 export async function reset2FAAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
-	const { session, user } = getCurrentSession();
+	const { session, user } = await getCurrentSession();
 	if (session === null) {
 		return {
 			message: "Not authenticated"

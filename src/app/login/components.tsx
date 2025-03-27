@@ -1,14 +1,14 @@
 "use client";
 
 import { loginAction } from "./actions";
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 
 const initialState = {
 	message: ""
 };
 
 export function LoginForm() {
-	const [state, action] = useFormState(loginAction, initialState);
+	const [state, action] = useActionState(loginAction, initialState);
 
 	return (
 		<form action={action}>
@@ -18,7 +18,7 @@ export function LoginForm() {
 			<label htmlFor="form-login.password">Password</label>
 			<input type="password" id="form-login.password" name="password" autoComplete="current-password" required />
 			<br />
-			<button>Continue</button>
+			<button type="submit">Continue</button>
 			<p>{state.message}</p>
 		</form>
 	);

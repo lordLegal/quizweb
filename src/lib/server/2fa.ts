@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { decryptToString, encryptString } from "./encryption";
 import { ExpiringTokenBucket } from "./rate-limit";
 import { generateRandomRecoveryCode } from "./utils";
@@ -10,7 +10,7 @@ export const recoveryCodeBucket = new ExpiringTokenBucket<number>(3, 60 * 60);
 
 export async function resetUser2FAWithRecoveryCode(userId: number, recoveryCode: string): Promise<boolean> {
   // Verwenden einer Transaktion, um sicherzustellen, dass alle Operationen atomar sind
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // Benutzer mit der angegebenen ID finden
     const user = await tx.user.findUnique({
       where: { id: userId },
@@ -39,7 +39,7 @@ export async function resetUser2FAWithRecoveryCode(userId: number, recoveryCode:
     
     // Benutzer aktualisieren mit OPTIMISTIC CONCURRENCY CHECK
     try {
-      const updateResult = await tx.user.update({
+      await tx.user.update({
         where: { 
           id: userId,
           recoveryCode: user.recoveryCode // Stellt sicher, dass der Recovery-Code nicht geändert wurde
@@ -52,7 +52,7 @@ export async function resetUser2FAWithRecoveryCode(userId: number, recoveryCode:
       
       // Wenn wir hier ankommen, war die Aktualisierung erfolgreich
       return true;
-    } catch (error) {
+    } catch {
       // Wenn ein Fehler bei der Aktualisierung auftritt (z.B. weil der Recovery-Code bereits geändert wurde)
       return false;
     }

@@ -14,6 +14,7 @@ export async function checkEmailAvailability(email: string): Promise<boolean> {
 		
 		return count === 0;
 	} catch (error) {
+		console.error("Error during email availability check:", error);
 		throw new Error("Fehler bei der Überprüfung der E-Mail-Verfügbarkeit");
 	}
 }

@@ -3,13 +3,13 @@ import Link from "next/link";
 import { TwoFactorVerificationForm } from "./components";
 import { getCurrentSession } from "@/lib/server/session";
 import { redirect } from "next/navigation";
-import { globalGETRateLimit } from "@/lib/server/request";
+import { globalGETRateLimit } from "@/lib/server/requests";
 
-export default function Page() {
-	if (!globalGETRateLimit()) {
+export default async function Page() {
+	if (!await globalGETRateLimit()) {
 		return "Too many requests";
 	}
-	const { session, user } = getCurrentSession();
+	const { session, user } = await getCurrentSession();
 	if (session === null) {
 		return redirect("/login");
 	}

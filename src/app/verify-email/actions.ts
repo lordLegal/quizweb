@@ -42,7 +42,7 @@ export async function verifyEmailAction(_prev: ActionResult, formData: FormData)
 		};
 	}
 
-	let verificationRequest = getUserEmailVerificationRequestFromRequest();
+	let verificationRequest = await getUserEmailVerificationRequestFromRequest();
 	if (verificationRequest === null) {
 		return {
 			message: "Not authenticated"
@@ -65,7 +65,7 @@ export async function verifyEmailAction(_prev: ActionResult, formData: FormData)
 		};
 	}
 	if (Date.now() >= await verificationRequest.expiresAt.getTime()) {
-		verificationRequest = createEmailVerificationRequest(verificationRequest.userId, verificationRequest.email);
+		verificationRequest = await createEmailVerificationRequest(verificationRequest.userId, verificationRequest.email);
 		sendVerificationEmail(verificationRequest.email, verificationRequest.code);
 		return {
 			message: "The verification code was expired. We sent another code to your inbox."
@@ -87,7 +87,7 @@ export async function verifyEmailAction(_prev: ActionResult, formData: FormData)
 }
 
 export async function resendEmailVerificationCodeAction(): Promise<ActionResult> {
-	const { session, user } = getCurrentSession();
+	const { session, user } = await getCurrentSession();
 	if (session === null) {
 		return {
 			message: "Not authenticated"
@@ -103,7 +103,7 @@ export async function resendEmailVerificationCodeAction(): Promise<ActionResult>
 			message: "Too many requests"
 		};
 	}
-	let verificationRequest = getUserEmailVerificationRequestFromRequest();
+	let verificationRequest = await getUserEmailVerificationRequestFromRequest();
 	if (verificationRequest === null) {
 		if (user.emailVerified) {
 			return {
@@ -115,14 +115,14 @@ export async function resendEmailVerificationCodeAction(): Promise<ActionResult>
 				message: "Too many requests"
 			};
 		}
-		verificationRequest = createEmailVerificationRequest(user.id, user.email);
+		verificationRequest = await createEmailVerificationRequest(user.id, user.email);
 	} else {
 		if (!sendVerificationEmailBucket.consume(user.id, 1)) {
 			return {
 				message: "Too many requests"
 			};
 		}
-		verificationRequest = createEmailVerificationRequest(user.id, verificationRequest.email);
+		verificationRequest = await createEmailVerificationRequest(user.id, verificationRequest.email);
 	}
 	sendVerificationEmail(verificationRequest.email, verificationRequest.code);
 	setEmailVerificationRequestCookie(verificationRequest);

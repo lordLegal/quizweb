@@ -7,7 +7,7 @@ import { createSession, generateSessionToken, setSessionTokenCookie } from "@/li
 import { getUserFromEmail, getUserPasswordHash } from "@/lib/server/user";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { globalPOSTRateLimit } from "@/lib/server/request";
+import { globalPOSTRateLimit } from "@/lib/server/requests";
 
 import type { SessionFlags } from "@/lib/server/session";
 
@@ -21,7 +21,7 @@ export async function loginAction(_prev: ActionResult, formData: FormData): Prom
 		};
 	}
 	// TODO: Assumes X-Forwarded-For is always included.
-	const clientIP = headers().get("X-Forwarded-For");
+	const clientIP = (await headers()).get("X-Forwarded-For");
 	if (clientIP !== null && !ipBucket.check(clientIP, 1)) {
 		return {
 			message: "Too many requests"
@@ -45,7 +45,7 @@ export async function loginAction(_prev: ActionResult, formData: FormData): Prom
 			message: "Invalid email"
 		};
 	}
-	const user = getUserFromEmail(email);
+	const user = await getUserFromEmail(email);
 	if (user === null) {
 		return {
 			message: "Account does not exist"
@@ -61,7 +61,12 @@ export async function loginAction(_prev: ActionResult, formData: FormData): Prom
 			message: "Too many requests"
 		};
 	}
-	const passwordHash = getUserPasswordHash(user.id);
+	if (user === null) {
+		return {
+			message: "Account does not exist"
+		};
+	}
+	const passwordHash = await getUserPasswordHash(user.id);
 	const validPassword = await verifyPasswordHash(passwordHash, password);
 	if (!validPassword) {
 		return {
@@ -73,7 +78,7 @@ export async function loginAction(_prev: ActionResult, formData: FormData): Prom
 		twoFactorVerified: false
 	};
 	const sessionToken = generateSessionToken();
-	const session = createSession(sessionToken, user.id, sessionFlags);
+	const session = await createSession(sessionToken, user.id, sessionFlags);
 	setSessionTokenCookie(sessionToken, session.expiresAt);
 
 	if (!user.emailVerified) {

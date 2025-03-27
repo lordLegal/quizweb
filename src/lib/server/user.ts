@@ -69,7 +69,7 @@ export async function setUserAsEmailVerifiedIfEmailMatches(userId: number, email
 			},
 		});
 		return result.count > 0;
-	} catch (error) {
+	} catch {
 		return false;
 	}
 }
