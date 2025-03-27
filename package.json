@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tailwindcss/postcss": "^4",
     "@node-rs/argon2": "^2.0.2",
     "@oslojs/crypto": "^1.0.1",
     "@oslojs/encoding": "^1.1.0",
@@ -19,7 +20,10 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
-    "uqr": "^0.1.2"
+    "uqr": "^0.1.2",
+    "tailwindcss": "^4",
+    "prisma": "^6.5.0",
+    "@types/bcrypt": "^5.0.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
