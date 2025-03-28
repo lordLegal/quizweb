@@ -81,7 +81,7 @@ export async function sendVerificationEmail(email: string, code: string): Promis
   
 	// Definiere die Mail-Optionen
 	const mailOptions = {
-	  from: '"Quiz App" <BEN231008@spengergasse.at>', // Passe Absender an
+	  from: '"Quiz App" <kontakt@digitalkreativ.at>', // Passe Absender an
 	  to: email,
 	  subject: 'Your Verification Code',
 	  text: `Your verification code is ${code}`, // Klartext-Version
