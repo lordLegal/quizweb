@@ -1,7 +1,8 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { startQuizAttempt, finishQuizAttempt } from "./actions"; // Server Actions
 
 export interface Option {
   id: string;
@@ -14,14 +15,13 @@ export interface Question {
   text: string;
   options: Option[];
 }
-import { startQuizAttempt, finishQuizAttempt } from "./actions"; // Server Actions
 
 export interface QuizRoundProps {
   lobbyId: string;
-  quizId: string;          // Damit wir wissen, welches Quiz wir spielen
-  questions: Question[];   // Alle Fragen
-  totalTime: number;       // Gesamtzeit in Sekunden
-  currentUser: number;     // Current user identifier
+  quizId: string;        // Damit wir wissen, welches Quiz gespielt wird
+  questions: Question[]; // Alle Fragen
+  totalTime: number;     // Gesamtzeit in Sekunden
+  currentUser: number;   // Aktuelle User-ID (0 bei Nickname-User)
 }
 
 export default function QuizRound({ lobbyId, quizId, questions, totalTime, currentUser }: QuizRoundProps) {
@@ -32,35 +32,34 @@ export default function QuizRound({ lobbyId, quizId, questions, totalTime, curre
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
 
-  // Beim Mounten: Attempt starten
+  // Beim Mounten: Starte den Attempt – auch für Nickname-User (currentUser === 0)
   useEffect(() => {
     async function createAttempt() {
-      
-      
       const attempt = await startQuizAttempt(currentUser, quizId);
       setAttemptId(attempt.id);
     }
     createAttempt();
-  }, [quizId]);
+  }, [quizId, currentUser]);
 
-  // Gesamt-Timer
+  // Gesamt-Timer: läuft von totalTime herunter
   useEffect(() => {
     if (finished) return;
     if (timeLeft <= 0) {
       handleFinish();
       return;
     }
-    const timer = setTimeout(() => setTimeLeft(time => time - 1), 1000);
+    const timer = setTimeout(() => setTimeLeft(prev => prev - 1), 1000);
     return () => clearTimeout(timer);
   }, [timeLeft, finished]);
 
-  function handleAnswer(option: Option) {
+  function handleAnswer(optionId: string) {
     if (finished) return;
-    if (option.isCorrect) {
-      setScore(s => s + 1);
+    const selectedOption = questions[currentQuestionIndex].options.find(o => o.id === optionId);
+    if (selectedOption && selectedOption.isCorrect) {
+      setScore(prev => prev + 1);
     }
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(i => i + 1);
+      setCurrentQuestionIndex(prev => prev + 1);
     } else {
       handleFinish();
     }
@@ -68,35 +67,38 @@ export default function QuizRound({ lobbyId, quizId, questions, totalTime, curre
 
   async function handleFinish() {
     setFinished(true);
-    if (!attemptId) return; // Falls noch kein Attempt erstellt wurde
-    // Hier rufst du finishQuizAttempt auf und übergibst den finalen Score
+    if (!attemptId) return;
     await finishQuizAttempt(attemptId, score);
-    // Dann leitest du zum Dashboard weiter
+    // Weiterleitung zum Dashboard (im Dashboard kannst du dann z.B. den Nickname anzeigen, falls currentUser === 0)
     router.push(`/lobby/quiz/${lobbyId}/dashboard`);
   }
 
   const currentQuestion = questions[currentQuestionIndex];
-
   if (!currentQuestion) {
     return <div>Keine Fragen verfügbar.</div>;
   }
 
   return (
-    <div className="p-4">
-      <h2>Frage {currentQuestionIndex + 1} / {questions.length}</h2>
-      <p>Verbleibende Zeit: {timeLeft} Sekunden</p>
-      <p>Punkte: {score}</p>
-
-      <div className="mt-4 p-4 bg-white rounded shadow">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12">
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold">
+          Frage {currentQuestionIndex + 1} von {questions.length}
+        </h2>
+        <p className="text-lg text-gray-600">
+          Verbleibende Zeit: {timeLeft} Sekunden
+        </p>
+        <p className="text-lg text-gray-600">Aktuelle Punkte: {score}</p>
+      </div>
+      <div className="mt-4 p-4 bg-white rounded shadow w-full max-w-md">
         <p className="mb-4 font-bold text-xl">{currentQuestion.text}</p>
-        {currentQuestion.options.map((opt) => (
+        {currentQuestion.options.map((option) => (
           <button
-            key={opt.id}
-            onClick={() => handleAnswer(opt)}
+            key={option.id}
+            onClick={() => handleAnswer(option.id)}
             disabled={finished}
-            className="block w-full mb-2 bg-blue-600 text-white py-2 rounded"
+            className="block w-full mb-2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
           >
-            {opt.text}
+            {option.text}
           </button>
         ))}
       </div>

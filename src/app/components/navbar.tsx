@@ -27,9 +27,6 @@ const Navbar = ({ user, isLoading }: AuthProps) => {
   // Navigationslinks
   const navLinks = [
     { name: 'Startseite', href: '/' },
-    { name: 'Über uns', href: '/about' },
-    { name: 'Services', href: '/services' },
-    { name: 'Kontakt', href: '/contact' },
   ];
 
   // Scrollen erkennen für Schatten-Effekt

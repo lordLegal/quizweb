@@ -1,17 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createLobby } from './actions';
+
+interface Quiz {
+  id: string;
+  title: string;
+}
 
 interface LobbyCreateFormProps {
   currentUserId: number;
   currentUserName: string;
+  Quizes?: Quiz[]; // Optional, falls Quizes nicht übergeben werden
 }
 
-export default function LobbyCreateForm({ currentUserId, currentUserName }: LobbyCreateFormProps) {
+export default function LobbyCreateForm({ currentUserId, currentUserName, Quizes }: LobbyCreateFormProps) {
   const [loading, setLoading] = useState(false);
+  const [quizList, setQuizList] = useState<Quiz[]>([]);
+  const [selectedQuizId, setSelectedQuizId] = useState("");
   const router = useRouter();
+
+  useEffect(() => {
+    if (Quizes) {
+      setQuizList(Quizes);
+      console.log('Quizes:', Quizes);
+    }
+  }, [Quizes]);
+
+  console.log('QuizList:', quizList);
+  
+
+
+  
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -21,10 +42,12 @@ export default function LobbyCreateForm({ currentUserId, currentUserName }: Lobb
     // Setze hostId und hostNickname
     formData.append('hostId', currentUserId.toString());
     formData.append('hostNickname', currentUserName);
-
-    // Server Action zum Erstellen der Lobby aufrufen
+    // Falls ein Quiz ausgewählt wurde, wird dessen ID übermittelt
+    if (selectedQuizId) {
+      formData.append('quizId', selectedQuizId);
+    }
+    console.log('SelectedQuizId:', selectedQuizId);
     const lobby = await createLobby(formData);
-    // Direkt in den Warteraum weiterleiten
     router.push(`/lobby/waiting/${lobby.id}`);
   }
 
@@ -41,23 +64,31 @@ export default function LobbyCreateForm({ currentUserId, currentUserName }: Lobb
         />
       </div>
       <div className="mb-4">
-        <label className="block text-gray-700 font-medium">Quiz ID (optional):</label>
-        <input
-          type="text"
+        <label className="block text-gray-700 font-medium">Quiz auswählen (optional):</label>
+        <select
+          title='Quiz auswählen (optional)'
           name="quizId"
-          placeholder="Falls ein Quiz ausgewählt werden soll"
+          value={selectedQuizId}
+          onChange={(e) => setSelectedQuizId(e.target.value)}
           className="w-full border border-gray-300 p-2 rounded"
-        />
+        >
+          <option value="">-- Kein Quiz auswählen --</option>
+          {quizList.map((quiz) => (
+            <option key={quiz.id} value={quiz.id}>
+              {quiz.title}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="mb-4">
         <label className="block text-gray-700 font-medium">
           Fragenkatalog (CSV, optional):
         </label>
         <input
-        title='Fragenkatalog (CSV, optional)'
           type="file"
           name="questionsCSV"
           accept=".csv"
+          title="Fragenkatalog (CSV, optional)"
           className="w-full"
         />
         <p className="text-sm text-gray-500">
@@ -74,3 +105,5 @@ export default function LobbyCreateForm({ currentUserId, currentUserName }: Lobb
     </form>
   );
 }
+
+

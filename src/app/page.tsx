@@ -14,7 +14,7 @@ const HomePage = () => {
             Erstelle, teile und spiele aufregende Quiz-Spiele mit Freunden – ganz einfach und interaktiv!
           </p>
           <Link
-            href="/lobby"
+            href="/lobby/create"
             className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition duration-300"
           >
             Jetzt Lobby erstellen
@@ -42,7 +42,7 @@ const HomePage = () => {
             <div className="flex items-center justify-center">
               {/* Next.js Image Wrapper */}
               <Image
-                src="/quiz-illustration.svg"
+                src="/quizapp.png"
                 alt="Quiz Illustration"
                 width={500}
                 height={500}
@@ -88,7 +88,7 @@ const HomePage = () => {
             Starte jetzt deine eigene Quiz-Lobby und fordere deine Freunde zu spannenden Herausforderungen heraus!
           </p>
           <Link
-            href="/lobby"
+            href="/lobby/create"
             className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition duration-300"
           >
             Jetzt loslegen

@@ -2,6 +2,9 @@ import { getCurrentSession } from '@/lib/server/session';
 import { getUserFromEmail } from '@/lib/server/user';
 import LobbyCreateForm from './LobbyCreateForm';
 import { notFound } from 'next/navigation';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 export default async function CreateLobbyPage() {
   // Hole die Session
@@ -15,6 +18,10 @@ export default async function CreateLobbyPage() {
   if (!currentUser) {
     notFound();
   }
+
+  const quizzes = await prisma.quiz.findMany({
+    where: { isPublic: true },
+  });
   
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12">
@@ -22,6 +29,7 @@ export default async function CreateLobbyPage() {
       <LobbyCreateForm
         currentUserId={currentUser.id}
         currentUserName={currentUser.username}
+        Quizes={quizzes} // Übergebe die Quizzes an das Formular
       />
     </div>
   );

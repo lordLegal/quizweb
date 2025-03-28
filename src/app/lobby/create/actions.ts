@@ -27,9 +27,10 @@ export async function createLobby(formData: FormData) {
 
   // Prüfe, ob eine CSV-Datei hochgeladen wurde
   const csvFile = formData.get('questionsCSV');
-  if (csvFile && typeof csvFile !== 'string') {
+  if (csvFile && typeof csvFile !== 'string' && await (csvFile as File).text() !== '') {
     // Lese den CSV-Inhalt
     const csvText = await (csvFile as File).text();
+    
     const records = parse(csvText, {
       columns: true,
       skip_empty_lines: true,
@@ -39,7 +40,7 @@ export async function createLobby(formData: FormData) {
       data: {
         title: "Custom Quiz",
         description: "Fragen aus CSV hochgeladen",
-        isPublic: true,
+        isPublic: false,
         creatorId: hostId,
       },
     });
@@ -76,6 +77,17 @@ export async function createLobby(formData: FormData) {
     }
     // Setze quizId auf die ID des neu erstellten Quiz
     quizId = customQuiz.id;
+  }
+
+  if (quizId) {
+    // Überprüfe, ob das Quiz existiert
+    const quiz = await prisma.quiz.findUnique({
+      where: { id: quizId },
+      include: { questions: true },
+    });
+    if (!quiz) {
+      throw new Error('Das angegebene Quiz existiert nicht.');
+    }
   }
 
   // Erstelle die Lobby

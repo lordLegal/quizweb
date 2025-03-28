@@ -10,7 +10,7 @@ type Lobby = {
   participants: Array<{ id: string; nickname: string | null; userId?: number | null }>;
 };
 
-export default function LobbyPoller({ lobbyId, initialLobby }: { lobbyId: string; initialLobby: Lobby; }) {
+export default function LobbyPoller({ lobbyId, initialLobby, participant }: { lobbyId: string; initialLobby: Lobby; participant: string }) {
   const [lobby, setLobby] = useState<Lobby>(initialLobby);
   const [notification, setNotification] = useState<string | null>(null);
   const router = useRouter();
@@ -30,7 +30,7 @@ export default function LobbyPoller({ lobbyId, initialLobby }: { lobbyId: string
             }
             setLobby(newLobby);
             if (newLobby.status === 'STARTED') {
-              router.push(`/lobby/quiz/${lobbyId}`);
+              router.push(`/lobby/quiz/${lobbyId}?nickname=${participant}`);
             }
           }
         }
@@ -39,7 +39,7 @@ export default function LobbyPoller({ lobbyId, initialLobby }: { lobbyId: string
       }
     }, 3000);
     return () => clearInterval(interval);
-  }, [lobby, lobbyId, router]);
+  }, [lobby, lobbyId, router, participant]);
 
   return (
     <div>

@@ -18,7 +18,7 @@ export default function JoinForm({ lobbyId }: { lobbyId: string }) {
       body: JSON.stringify({ lobbyId, nickname }),
     });
     if (res.ok) {
-      router.push(`/lobby/waiting/${lobbyId}`);
+      router.push(`/lobby/waiting/${lobbyId}?nickname=${nickname}`);
     }
     setLoading(false);
   }

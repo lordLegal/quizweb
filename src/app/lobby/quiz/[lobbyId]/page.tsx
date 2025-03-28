@@ -1,13 +1,19 @@
-"use server"
-// app/lobby/quiz/[lobbyId]/page.tsx
-import { notFound } from 'next/navigation';
-import QuizRound, { Question } from './QuizRound';
-import { PrismaClient } from '@prisma/client';
+"use server";
+import { notFound } from "next/navigation";
+import QuizRound, { Question } from "./QuizRound";
+import { PrismaClient } from "@prisma/client";
+import { getCurrentSession } from "@/lib/server/session";
+import { getUserFromEmail } from "@/lib/server/user";
 
 const prisma = new PrismaClient();
 
-export default async function QuizRoundPage( { params }: { params: Promise<{ lobbyId: string }> }) {
+export default async function QuizRoundPage({ params, searchParams }: { 
+  params: Promise<{ lobbyId: string }>,
+  searchParams: Promise<{ nickname?: string }>
+}) {
   const { lobbyId } = await params;
+  const resolvedSearchParams = await Promise.resolve(searchParams);
+  console.log('Resolved Search Params:', resolvedSearchParams);
   const lobby = await prisma.lobby.findUnique({
     where: { id: lobbyId },
   });
@@ -15,6 +21,12 @@ export default async function QuizRoundPage( { params }: { params: Promise<{ lob
     notFound();
   }
   
+  // Hole die Session
+  const { user } = await getCurrentSession();
+  
+  // Hole den User aus der DB – falls vorhanden. Falls nicht (z. B. bei Nickname-User), verwenden wir 0.
+  const currentUserObj = await getUserFromEmail(user?.email || '');
+  const currentUser = currentUserObj ? currentUserObj.id : 0;
   
   let questions: Question[] = [];
   if (lobby.quizId) {
@@ -34,8 +46,8 @@ export default async function QuizRoundPage( { params }: { params: Promise<{ lob
       lobbyId={lobbyId}
       questions={questions}
       quizId={lobby.quizId ?? ''}
-      totalTime={60}
-      currentUser={lobby.hostId} // Pass the current user ID to the QuizRound component
+      totalTime={60} // Gesamtzeit in Sekunden für alle Fragen
+      currentUser={currentUser} // 0, falls kein richtiger Account
     />
   );
 }

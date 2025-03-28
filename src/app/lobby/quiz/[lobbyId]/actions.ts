@@ -1,18 +1,17 @@
 'use server';
-
-import { revalidatePath } from 'next/cache';
 import { PrismaClient, QuizAttempt } from '@prisma/client';
+import { revalidatePath } from 'next/cache';
 
 const prisma = new PrismaClient();
 
 /**
- * Lege einen neuen QuizAttempt für einen User an.
- * userId und quizId kannst du aus der Session oder Lobby holen.
+ * Startet einen neuen QuizAttempt.
+ * currentUser kann auch 0 sein, wenn es sich um einen Nickname-User handelt.
  */
 export async function startQuizAttempt(userId: number, quizId: string): Promise<QuizAttempt> {
   const attempt = await prisma.quizAttempt.create({
     data: {
-      userId,
+      userId, // Falls userId 0, dann handelt es sich um einen Nickname-User
       quizId,
       startedAt: new Date(),
     },
@@ -21,9 +20,7 @@ export async function startQuizAttempt(userId: number, quizId: string): Promise<
 }
 
 /**
- * Schließe den Attempt ab, setze completedAt und Score.
- * (In einer echten Anwendung würdest du hier serverseitig
- * den Score anhand der Antworten berechnen.)
+ * Schließt den Attempt ab, setzt completedAt und Score.
  */
 export async function finishQuizAttempt(attemptId: string, score: number): Promise<QuizAttempt> {
   const attempt = await prisma.quizAttempt.update({
@@ -33,7 +30,6 @@ export async function finishQuizAttempt(attemptId: string, score: number): Promi
       score,
     },
   });
-  // Revalidate (optional), falls du statische Seiten hast
   revalidatePath(`/lobby/quiz/${attempt.quizId}/dashboard`);
   return attempt;
 }
