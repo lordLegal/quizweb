@@ -19,7 +19,10 @@ export default async function CreateLobbyPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12">
       <h1 className="text-3xl font-bold mb-6">Lobby erstellen</h1>
-      <LobbyCreateForm currentUserId={currentUser.id} currentUserName={currentUser.username} />
+      <LobbyCreateForm
+        currentUserId={currentUser.id}
+        currentUserName={currentUser.username}
+      />
     </div>
   );
 }

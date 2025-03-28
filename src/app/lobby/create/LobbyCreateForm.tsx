@@ -18,7 +18,7 @@ export default function LobbyCreateForm({ currentUserId, currentUserName }: Lobb
     setLoading(true);
 
     const formData = new FormData(event.currentTarget);
-    // Setze die hostId und hostNickname (verwende den tatsächlichen Benutzernamen)
+    // Setze hostId und hostNickname
     formData.append('hostId', currentUserId.toString());
     formData.append('hostNickname', currentUserName);
 
@@ -31,23 +31,38 @@ export default function LobbyCreateForm({ currentUserId, currentUserName }: Lobb
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md w-full max-w-md">
       <div className="mb-4">
-        <label className="block text-gray-700">Maximale Spielerzahl:</label>
+        <label className="block text-gray-700 font-medium">Maximale Spielerzahl:</label>
         <input
-        title='Maximale Spielerzahl'
           type="number"
           name="maxPlayers"
           required
+          title="Maximale Spielerzahl"
           className="w-full border border-gray-300 p-2 rounded"
         />
       </div>
       <div className="mb-4">
-        <label className="block text-gray-700">Quiz ID (optional):</label>
+        <label className="block text-gray-700 font-medium">Quiz ID (optional):</label>
         <input
           type="text"
           name="quizId"
           placeholder="Falls ein Quiz ausgewählt werden soll"
           className="w-full border border-gray-300 p-2 rounded"
         />
+      </div>
+      <div className="mb-4">
+        <label className="block text-gray-700 font-medium">
+          Fragenkatalog (CSV, optional):
+        </label>
+        <input
+        title='Fragenkatalog (CSV, optional)'
+          type="file"
+          name="questionsCSV"
+          accept=".csv"
+          className="w-full"
+        />
+        <p className="text-sm text-gray-500">
+          Lade eine CSV-Datei hoch, um eigene Fragen zu verwenden. Andernfalls werden Standardfragen genutzt.
+        </p>
       </div>
       <button
         type="submit"

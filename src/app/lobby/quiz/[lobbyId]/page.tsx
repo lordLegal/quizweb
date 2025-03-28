@@ -1,3 +1,4 @@
+"use server"
 // app/lobby/quiz/[lobbyId]/page.tsx
 import { notFound } from 'next/navigation';
 import QuizRound, { Question } from './QuizRound';
@@ -13,6 +14,7 @@ export default async function QuizRoundPage( { params }: { params: Promise<{ lob
   if (!lobby || lobby.status !== 'STARTED') {
     notFound();
   }
+  
   
   let questions: Question[] = [];
   if (lobby.quizId) {
@@ -31,7 +33,9 @@ export default async function QuizRoundPage( { params }: { params: Promise<{ lob
     <QuizRound 
       lobbyId={lobbyId}
       questions={questions}
-      timerDuration={30} // Sekunden pro Frage
+      quizId={lobby.quizId ?? ''}
+      totalTime={60}
+      currentUser={lobby.hostId} // Pass the current user ID to the QuizRound component
     />
   );
 }

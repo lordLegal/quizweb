@@ -4,6 +4,7 @@ import { ExpiringTokenBucket } from "./rate-limit";
 import { encodeBase32 } from "@oslojs/encoding";
 import { cookies } from "next/headers";
 import { getCurrentSession } from "./session";
+import nodemailer from 'nodemailer';
 
 const prisma = new PrismaClient();
 
@@ -67,8 +68,30 @@ export async function deleteUserEmailVerificationRequest(userId: number): Promis
 }
 
 export async function sendVerificationEmail(email: string, code: string): Promise<void> {
-	console.log(`To ${email}: Your verification code is ${code}`);
-}
+	// Erstelle einen Transporter mit deinen SMTP-Einstellungen
+	const transporter = nodemailer.createTransport({
+	  host: process.env.SMTP_HOST,
+	  port: Number(process.env.SMTP_PORT),
+	  secure: process.env.SMTP_SECURE === 'true', // true bei Port 465, false bei anderen Ports
+	  auth: {
+		user: process.env.SMTP_USER,
+		pass: process.env.SMTP_PASS,
+	  },
+	});
+  
+	// Definiere die Mail-Optionen
+	const mailOptions = {
+	  from: '"Quiz App" <BEN231008@spengergasse.at>', // Passe Absender an
+	  to: email,
+	  subject: 'Your Verification Code',
+	  text: `Your verification code is ${code}`, // Klartext-Version
+	  html: `<p>Your verification code is <strong>${code}</strong></p>`, // HTML-Version
+	};
+  
+	// Versende die E-Mail
+	const info = await transporter.sendMail(mailOptions);
+	console.log(`Verification email sent: ${info.messageId}`);
+  }
 
 export async function setEmailVerificationRequestCookie(request: EmailVerificationRequest): Promise<void> {
 	const cookieStore = await cookies();

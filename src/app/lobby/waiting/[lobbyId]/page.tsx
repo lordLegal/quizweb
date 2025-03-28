@@ -1,10 +1,10 @@
-
 import { notFound } from 'next/navigation';
 import LobbyPoller from '../LobbyPoller';
 import WaitingRoomActions from './WaitingRoomActions';
 import { getCurrentSession } from '@/lib/server/session';
 import { getUserFromEmail } from '@/lib/server/user';
 import { PrismaClient } from '@prisma/client';
+import { ParticipantList } from "./ParticipantList";
 
 const prisma = new PrismaClient();
 
@@ -32,7 +32,9 @@ export default async function WaitingRoomPage({ params }: { params: Promise<{ lo
       <p className="mb-2">Status: {lobby.status}</p>
       <div className="mb-4">
         <p className="font-bold">Einladungslink:</p>
-        <p className="text-blue-600 underline">{`${process.env.NEXT_PUBLIC_BASE_URL}/lobby/join/${lobby.id}`}</p>
+        <p className="text-blue-600 underline">
+          {`${process.env.NEXT_PUBLIC_BASE_URL}/lobby/join/${lobby.id}`}
+        </p>
       </div>
       <LobbyPoller
         lobbyId={lobby.id}
@@ -47,15 +49,8 @@ export default async function WaitingRoomPage({ params }: { params: Promise<{ lo
         hostId={lobby.hostId}
         currentUserId={currentUserId}
       />
-      <div className="mt-6">
-        <h2 className="text-xl font-bold">Aktuelle Teilnehmer:</h2>
-        <ul>
-          {lobby.participants.map((p) => (
-            <li key={p.id}>
-              {p.nickname || (p.userId ? `User ${p.userId}` : 'Gast')}
-            </li>
-          ))}
-        </ul>
+      <div className="mt-6 w-full max-w-md">
+        <ParticipantList lobbyId={lobby.id} initialParticipants={lobby.participants} />
       </div>
     </div>
   );
