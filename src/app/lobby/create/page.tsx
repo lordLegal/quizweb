@@ -1,7 +1,7 @@
 import { getCurrentSession } from '@/lib/server/session';
 import { getUserFromEmail } from '@/lib/server/user';
 import LobbyCreateForm from './LobbyCreateForm';
-import { notFound } from 'next/navigation';
+import {  redirect } from 'next/navigation';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -10,13 +10,13 @@ export default async function CreateLobbyPage() {
   // Hole die Session
   const { user } = await getCurrentSession();
   if (!user) {
-    notFound(); // oder redirect zu Login
+    redirect('/register');
   }
   
   // Hole den User aus der Datenbank
   const currentUser = await getUserFromEmail(user.email);
   if (!currentUser) {
-    notFound();
+    redirect('/register');
   }
 
   const quizzes = await prisma.quiz.findMany({
