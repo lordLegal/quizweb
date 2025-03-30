@@ -10,13 +10,15 @@ export default async function CreateLobbyPage() {
   // Hole die Session
   const { user } = await getCurrentSession();
   if (!user) {
-    redirect('/register');
+    redirect('/signup');
+    return;
   }
   
   // Hole den User aus der Datenbank
   const currentUser = await getUserFromEmail(user.email);
   if (!currentUser) {
-    redirect('/register');
+    redirect('/signup');
+    return;
   }
 
   const quizzes = await prisma.quiz.findMany({

@@ -64,6 +64,7 @@ export async function verifyEmailAction(_prev: ActionResult, formData: FormData)
 			message: "Too many requests"
 		};
 	}
+	try {
 	if (Date.now() >= await verificationRequest.expiresAt.getTime()) {
 		verificationRequest = await createEmailVerificationRequest(verificationRequest.userId, verificationRequest.email);
 		sendVerificationEmail(verificationRequest.email, verificationRequest.code);
@@ -80,6 +81,13 @@ export async function verifyEmailAction(_prev: ActionResult, formData: FormData)
 	invalidateUserPasswordResetSessions(user.id);
 	updateUserEmailAndSetEmailAsVerified(user.id, verificationRequest.email);
 	deleteEmailVerificationRequestCookie();
+	}
+	catch (error) {
+		console.error("Error verifying email:", error);
+		return {
+			message: "Error verifying email"
+		};
+	}
 	if (!user.registered2FA) {
 		return redirect("/2fa/setup");
 	}

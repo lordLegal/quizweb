@@ -73,10 +73,30 @@ export async function signupAction(_prev: ActionResult, formData: FormData): Pro
 			message: "Too many requests"
 		};
 	}
-	const user = await createUser(email, username, password);
-	const emailVerificationRequest = await createEmailVerificationRequest(user.id, user.email);
-	sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
-	setEmailVerificationRequestCookie(emailVerificationRequest);
+	let user;
+	try {
+	 user = await createUser(email, username, password);
+	}
+	catch (error) {
+		console.error("Error creating user:", error);
+		return {
+			message: "Error creating user"
+		};
+	}
+	let emailVerificationRequest;
+	try {
+		emailVerificationRequest = await createEmailVerificationRequest(user.id, user.email);
+		sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
+		setEmailVerificationRequestCookie(emailVerificationRequest);
+	} catch (error) {
+		console.error("Error creating email verification request:", error);
+		return {
+			message: "Error creating email verification request"
+		};
+	}
+	
+	try {
+
 
 	const sessionFlags: SessionFlags = {
 		twoFactorVerified: false
@@ -84,6 +104,12 @@ export async function signupAction(_prev: ActionResult, formData: FormData): Pro
 	const sessionToken = await generateSessionToken();
 	const session = await createSession(sessionToken, user.id, sessionFlags);
 	setSessionTokenCookie(sessionToken, session.expiresAt);
+	} catch (error) {
+		console.error("Error creating session:", error);
+		return {
+			message: "Error creating session"
+		};
+	}
 	return redirect("/2fa/setup");
 }
 

@@ -69,6 +69,7 @@ export async function deleteUserEmailVerificationRequest(userId: number): Promis
 
 export async function sendVerificationEmail(email: string, code: string): Promise<void> {
 	// Erstelle einen Transporter mit deinen SMTP-Einstellungen
+	try {
 	const transporter = nodemailer.createTransport({
 	  host: process.env.SMTP_HOST,
 	  port: Number(process.env.SMTP_PORT),
@@ -87,10 +88,14 @@ export async function sendVerificationEmail(email: string, code: string): Promis
 	  text: `Your verification code is ${code}`, // Klartext-Version
 	  html: `<p>Your verification code is <strong>${code}</strong></p>`, // HTML-Version
 	};
-  
+	
 	// Versende die E-Mail
 	const info = await transporter.sendMail(mailOptions);
 	console.log(`Verification email sent: ${info.messageId}`);
+	} catch (error) {
+		console.error("Error sending verification email:", error);
+		throw new Error(`Fehler beim Senden der Bestätigungs-E-Mail ${error}`);
+	}
   }
 
 export async function setEmailVerificationRequestCookie(request: EmailVerificationRequest): Promise<void> {
