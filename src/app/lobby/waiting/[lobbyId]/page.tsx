@@ -68,7 +68,7 @@ export default async function WaitingRoomPage({ params, searchParams }: { params
       <div className="mb-4">
         <p className="font-bold">Einladungslink:</p>
         <p className="text-blue-600 underline">
-          {`${process.env.NEXT_PUBLIC_BASE_URL}/lobby/join/${lobby.id}`}
+          {`https://quizweb-sigma.vercel.app/lobby/join/${lobby.id}`}
         </p>
       </div>
       <LobbyPoller
