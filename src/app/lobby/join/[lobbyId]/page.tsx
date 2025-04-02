@@ -16,7 +16,7 @@ export default async function JoinLobbyPage({ params }: { params: Promise<{ lobb
     notFound();
   }
 
-  if (lobby.participants.length >= lobby.maxPlayers) {
+  if (lobby.participants.length > lobby.maxPlayers) {
     return (
       <div className="min-h-screen bg-gray-100 flex flex-col items-center py-12">
         <h1 className="text-3xl font-bold mb-6">Lobby ist voll</h1>
